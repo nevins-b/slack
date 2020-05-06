@@ -2,6 +2,7 @@ package slack
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"strconv"
 )
@@ -41,6 +42,35 @@ type Login struct {
 	ISP       string `json:"isp"`
 	Country   string `json:"country"`
 	Region    string `json:"region"`
+}
+
+func (l *Login) UnmarshalJSON(data []byte) error {
+	s := make(map[string]interface{})
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	l.UserID = s["user_id"].(string)
+	l.Username = s["username"].(string)
+	l.DateFirst = int(s["date_first"].(float64))
+	l.DateLast = int(s["date_last"].(float64))
+	l.Count = int(s["count"].(float64))
+	l.UserAgent = s["user_agent"].(string)
+	if v, ok := s["isp"]; ok && v != nil {
+		l.ISP = v.(string)
+	}
+	if v, ok := s["country"]; ok && v != nil {
+		l.Country = v.(string)
+	}
+	if v, ok := s["region"]; ok && v != nil {
+		l.Region = v.(string)
+	}
+	if v, ok := s["ip"]; ok && v != nil {
+		switch v.(type) {
+		case string:
+			l.IP = v.(string)
+		}
+	}
+	return nil
 }
 
 type BillableInfoResponse struct {
